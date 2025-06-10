@@ -1,0 +1,22 @@
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} from 'discord.js'
+
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId('help_btn')
+    .setLabel('Help')
+    .setStyle(ButtonStyle.Primary),
+
+  new ButtonBuilder()
+    .setLabel('Visit Website')
+    .setURL('https://your.site')
+    .setStyle(ButtonStyle.Link)
+)
+
+channel.send({
+  content: '👋 Welcome! Choose an action:',
+  components: [row]
+})

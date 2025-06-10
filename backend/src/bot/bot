@@ -1,0 +1,165 @@
+import { Client, GatewayIntentBits, Events, Partials, EmbedBuilder } from 'discord.js'
+import GuildConfig from '../models/GuildConfig.js'
+import dotenv from 'dotenv'
+import { renderGreeting } from '../utils/renderGreeting.js'
+
+dotenv.config()
+
+let client
+
+export function startBot() {
+  client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildModeration,
+      GatewayIntentBits.GuildBans,
+      GatewayIntentBits.GuildEmojisAndStickers,
+      GatewayIntentBits.GuildIntegrations,
+      GatewayIntentBits.GuildWebhooks,
+      GatewayIntentBits.GuildInvites,
+      GatewayIntentBits.GuildVoiceStates,
+      GatewayIntentBits.GuildPresences,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildMessageReactions,
+      GatewayIntentBits.GuildMessageTyping,
+      GatewayIntentBits.DirectMessages,
+      GatewayIntentBits.DirectMessageReactions,
+      GatewayIntentBits.DirectMessageTyping,
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.GuildScheduledEvents,
+      GatewayIntentBits.AutoModerationConfiguration,
+      GatewayIntentBits.AutoModerationExecution,
+      GatewayIntentBits.GuildMessagePolls,
+      GatewayIntentBits.DirectMessagePolls,
+    ],
+    partials: [Partials.Channel],
+  })
+
+  client.once('ready', () => {
+    console.log(`🤖 Bot logged in as ${client.user.tag}`)
+  })
+
+  client.on('messageCreate', (msg) => {
+    if (msg.author.bot) return
+    if (msg.content === '!ping') msg.reply('🏓 Pong!')
+  })
+
+  client.on('messageReactionAdd', async (reaction, user) => {
+    if (user.bot) return
+
+    const guild = reaction.message.guild
+    if (!guild) return
+
+    const config = await GuildConfig.findOne({ guildId: guild.id })
+    if (!config?.reactionRoles?.length) return
+
+    for (const set of config.reactionRoles) {
+      if (set.messageId !== reaction.message.id) continue
+      const map = set.mappings.find(m => m.emoji === reaction.emoji.name)
+      if (!map) continue
+
+      const member = await guild.members.fetch(user.id)
+      await member.roles.add(map.roleId).catch(console.error)
+    }
+  })
+
+  client.on('messageReactionRemove', async (reaction, user) => {
+    if (user.bot) return
+
+    const guild = reaction.message.guild
+    if (!guild) return
+
+    const config = await GuildConfig.findOne({ guildId: guild.id })
+    if (!config?.reactionRoles?.length) return
+
+    for (const set of config.reactionRoles) {
+      if (set.messageId !== reaction.message.id) continue
+      const map = set.mappings.find(m => m.emoji === reaction.emoji.name)
+      if (!map) continue
+
+      const member = await guild.members.fetch(user.id)
+      await member.roles.remove(map.roleId).catch(console.error)
+    }
+  })
+
+  client.on('guildMemberAdd', async (member) => {
+    try {
+      const config = await GuildConfig.findOne({ guildId: member.guild.id })
+      const g = config?.greeting?.welcome
+      const log = config?.logs?.memberJoin
+      const auto = config?.autorole
+
+      if (log?.enabled && log?.channelId) {
+        const channel = member.guild.channels.cache.get(log.channelId)
+        if (channel?.isTextBased()) {
+          channel.send(`<@${member.id}> joined to the server!`)
+        }
+      }
+
+      if (auto?.enabled && auto.roleId?.length) {
+        for (const roleId of auto.roleId) {
+          const role = member.guild.roles.cache.get(roleId)
+          if (role) await member.roles.add(role).catch(console.error)
+        }
+      }
+
+      if (!g?.enabled || !g.channelId || !g.message) return
+
+      const channel = member.guild.channels.cache.get(g.channelId)
+      if (!channel?.isTextBased()) return
+
+      const embed = new EmbedBuilder()
+        .setColor('#00b0f4')
+        .setAuthor({ name: `${member.user.username} joined`, iconURL: member.user.displayAvatarURL() })
+        .setDescription(renderGreeting(g.message, member))
+        .setTimestamp()
+
+      await channel.send({ embeds: [embed] })
+    } catch (err) {
+      console.error('Greeting Error:', err)
+    }
+  })
+
+  client.on('guildMemberRemove', async (member) => {
+    try {
+      const config = await GuildConfig.findOne({ guildId: member.guild.id })
+      const g = config?.greeting?.leave
+      const log = config?.logs?.memberLeave
+
+      if (log?.enabled && log?.channelId) {
+        const channel = member.guild.channels.cache.get(log.channelId)
+        if (channel?.isTextBased()) {
+          channel.send(`<@${member.id}> left the server!`)
+        }
+      }
+
+      if (!g?.enabled || !g.channelId || !g.message) return
+
+      const channel = member.guild.channels.cache.get(g.channelId)
+      if (!channel?.isTextBased()) return
+
+      const embed = new EmbedBuilder()
+        .setColor('#ff5e5e')
+        .setAuthor({ name: `${member.user.username} left`, iconURL: member.user.displayAvatarURL() })
+        .setDescription(renderGreeting(g.message, member))
+        .setTimestamp()
+
+      await channel.send({ embeds: [embed] })
+    } catch (err) {
+      console.error('Leave Error:', err)
+    }
+  })
+
+  client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName === 'ping') {
+      await interaction.reply('Pong!');
+    }
+  });
+
+  client.login(process.env.DISCORD_TOKEN)
+}
+
+export { client }

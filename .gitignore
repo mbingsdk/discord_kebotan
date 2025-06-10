@@ -1,0 +1,15 @@
+# Direktori build/log
+build/
+logs/
+
+# File lingkungan (environment)
+.env
+*.env
+.env.production
+
+# File IDE
+.vscode/
+.idea/
+
+# Dependency folder
+node_modules/
