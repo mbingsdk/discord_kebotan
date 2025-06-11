@@ -5,7 +5,6 @@ logs/
 # File lingkungan (environment)
 .env
 *.env
-.env.production
 
 # File IDE
 .vscode/

@@ -1,3 +1,5 @@
+// Reference: https://github.com/gerinsp/dayoff-API
+
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 
