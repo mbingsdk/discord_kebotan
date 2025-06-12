@@ -99,6 +99,6 @@ function createHolidayEmbed(tahun, data, user) {
     title: `📌 Daftar Hari Libur ${tahun}`,
     description,
     thumbnail: user.displayAvatarURL(),
-    footer: 'Ref github: gerinsp'
+    footer: 'SDK-Dev'
   });
 }
