@@ -1,4 +1,4 @@
-import { createGuildEmojis, getGuildEmojis } from "../handlers/guildHandler.js"
+import { createGuildEmojis, deleteGuildEmojis, getGuildEmojis } from "../handlers/guildHandler.js"
 
 export const getGuildEmoji = async (req, res) => {
   try {
@@ -20,5 +20,15 @@ export const addGuildEmoji = async (req, res) => {
   } catch (err) {
     console.error('Failed to create emojis:', err)
     res.status(500).json({ message: 'Failed to create emojis' })
+  }
+}
+
+export const deleteGuildEmoji = async (req, res) => {
+  try {
+    await deleteGuildEmojis(req.params.id, req.params.emojiId)
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Failed to create emojis:', err)
+    res.status(500).json({ message: 'Failed to delete emojis' })
   }
 }

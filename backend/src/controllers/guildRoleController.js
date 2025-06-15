@@ -1,4 +1,4 @@
-import { Colors } from "discord.js"
+// import { Colors } from "discord.js"
 import {
   createRoles,
   editRoles,

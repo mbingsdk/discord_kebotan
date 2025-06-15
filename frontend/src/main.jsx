@@ -24,7 +24,7 @@ function RootRedirect() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  //<React.StrictMode>
+  <React.StrictMode>
     <AuthProvider>
       <AlertProvider>
         <BrowserRouter>
@@ -41,5 +41,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </BrowserRouter>
       </AlertProvider>
     </AuthProvider>
-  //</React.StrictMode>
+  </React.StrictMode>
 )

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { client } from '../bot/index.js'
 import GuildConfig from '../models/GuildConfig.js'
-import { Colors, AttachmentBuilder } from 'discord.js'
+// import { Colors, AttachmentBuilder } from 'discord.js'
 
 // ========= GUILD =========
 export const fetchGuilds = async (token) => {
@@ -50,6 +50,7 @@ export const fetchGuildMembers = async (id) => {
       username: m.user.username,
       discriminator: m.user.discriminator,
       avatar: m.user.displayAvatarURL(),
+      detail: m
     }))
 }
 
@@ -130,6 +131,12 @@ export const createGuildEmojis = async (guildId, name, url) => {
 
     console.log(`✅ Emoji created: <${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`)
     return { success: true, id: emoji.id, emoji: `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>` }
+}
+
+export const deleteGuildEmojis = async (guildId, emojiId) => {
+  const guild = await client.guilds.fetch(guildId)
+  const emoji = await guild.emojis.fetch(emojiId)
+  await emoji.delete()
 }
 
 // ========= GUILD ROLE =========
@@ -256,4 +263,19 @@ export const reorderGuildChannel = async (id, reordered) => {
       parent: ch.parent_id || null
     })
   }
+}
+
+export const updateChannel = async (guildId, channelId, data) => {
+  const guild = await client.guilds.fetch(guildId)
+  const channel = await guild.channel.fetch(channelId)
+
+  const update = {
+    name: data.name,
+    type: data.type,
+    parent: data.parent_id || null,
+    permissionOverwrites: data.permission_overwrites
+  }
+
+  await channel.edit(update)
+  return update
 }
